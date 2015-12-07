@@ -3,13 +3,105 @@
 %% When test.txt is a \n separated list, run as: ./day6 < test.txt
 main(_Args) ->
     Lines = collect_lines([]),
-    io:format("Output: ~p~n", [Lines]),
+    PL    = calc(Lines, []),
+    io:format("pl: ~p~n", [PL]),
     ok.
+
+% [{varname, value}]
+calc([], PL) ->
+    PL;
+
+calc([[A, "->", B] = C | Cs], PL) ->
+    case string:to_integer(A) of
+        % Not int
+        {error, _} ->
+            case lists:keyfind(A, 1, PL) of
+                % And not already known, skip to later
+                false ->
+                    calc(Cs ++ [C], PL);
+                % Already known, copy value
+                {_, Val} ->
+                    NewPL = lists:keystore(B, 1, PL, {B, Val}),
+                    calc(Cs, NewPL)
+            end;
+        % Int, set variable to
+        {AInt, _} ->
+            NewPL = lists:keystore(B, 1, PL, {B, AInt}),
+            calc(Cs, NewPL)
+    end;
+
+calc([["NOT", A, "->", B] = C | Cs], PL) ->
+    case string:to_integer(A) of
+        % Not int
+        {error, _} ->
+            case lists:keyfind(A, 1, PL) of
+                % And not already known, skip to later
+                false ->
+                    calc(Cs ++ [C], PL);
+                % Already known, copy value
+                {_, Val} ->
+                    NewPL = lists:keystore(B, 1, PL, {B, bnot Val}),
+                    calc(Cs, NewPL)
+            end;
+        % Int, set variable to
+        {AInt, _} ->
+            NewPL = lists:keystore(B, 1, PL, {B, bnot AInt}),
+            calc(Cs, NewPL)
+    end;
+
+calc([[A, Op, B, "->", BindTo] = C | Cs], PL) ->
+    {A2, _} = string:to_integer(A),
+    {B2, _} = string:to_integer(B),
+    AInMem  = lists:keyfind(A, 1, PL) /= false,
+    BInMem  = lists:keyfind(B, 1, PL) /= false,
+    if
+      %% Both terms are Ints
+      (A2 /= error) and (B2 /= error) ->
+        NewPL = lists:keystore(BindTo,
+                               1,
+                               PL,
+                               {BindTo, apply_op(Op, A2, B2)}),
+        calc(Cs, NewPL);
+      %% A is in memory and B is an Int
+      (A2 == error) and (B2 /= error) and AInMem ->
+        {_, AVal} = lists:keyfind(A, 1, PL),
+        NewPL = lists:keystore(BindTo,
+                               1,
+                               PL,
+                               {BindTo, apply_op(Op, AVal, B2)}),
+        calc(Cs, NewPL);
+      %% A is an Int and B is in memory
+      (A2 /= error) and (B2 == error) and BInMem ->
+        {_, BVal} = lists:keyfind(B, 1, PL),
+        NewPL = lists:keystore(BindTo,
+                               1,
+                               PL,
+                               {BindTo, apply_op(Op, A2, BVal)}),
+        calc(Cs, NewPL);
+      %% A and B are in memory
+      AInMem and BInMem ->
+        {_, AVal} = lists:keyfind(A, 1, PL),
+        {_, BVal} = lists:keyfind(B, 1, PL),
+        NewPL = lists:keystore(BindTo,
+                               1,
+                               PL,
+                               {BindTo, apply_op(Op, AVal, BVal)}),
+        calc(Cs, NewPL);
+      %% A and B are unknown terms, skip
+      true ->
+          calc(Cs ++ [C], PL)
+    end.
+
+apply_op("AND",    A, B) -> A band B;
+apply_op("OR",     A, B) -> A bor B;
+apply_op("RSHIFT", A, B) -> A bsr B;
+apply_op("LSHIFT", A, B) -> A bsl B.
 
 collect_lines(Xs) ->
     case io:get_line("") of
         eof ->
             Xs;
         X  ->
-            collect_lines(Xs ++ [X])
+            Keep = lists:droplast(X),
+            collect_lines(Xs ++ [string:tokens(Keep, " ")])
     end.
