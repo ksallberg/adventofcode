@@ -7,11 +7,9 @@ main(_Args) ->
     ok.
 
 collect_lines(Xs) ->
-    case io:fread("", "~s") of
-        {ok, [X]}  ->
-            collect_lines(Xs ++ [X]);
+    case io:get_line("") of
         eof ->
             Xs;
-        {error, _} ->
-            Xs
+        X  ->
+            collect_lines(Xs ++ [X])
     end.
