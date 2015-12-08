@@ -1,0 +1,26 @@
+#!/usr/bin/env escript
+
+%% When test.txt is a \n separated list, run as: ./day6 < test.txt
+main(_Args) ->
+    Lines = collect_lines([]),
+    PL    = lists:foldl(fun(Row, Acc) ->
+                            io:format("row~s~n", [Row]),
+                            Acc + count(Row)
+                        end, 0, Lines),
+    io:format("pl: ~B~n", [PL]).
+
+count([34]) -> 0;
+count([34|Rest]) -> count(Rest);
+count([92, 34 | Rest])       -> 1 + count(Rest);
+count([92, 92 | Rest])       -> 1 + count(Rest);
+count([92, $x, _, _ | Rest]) -> 1 + count(Rest);
+count([X|Xs])                -> 1 + count(Xs).
+
+collect_lines(Xs) ->
+    case io:fread("", "~s") of
+        eof ->
+            Xs;
+        {ok, Keep}  ->
+            [X] = io_lib:format("~s", [Keep]),
+            collect_lines(Xs ++ X)
+    end.
