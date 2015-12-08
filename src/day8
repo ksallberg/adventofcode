@@ -7,7 +7,11 @@ main(_Args) ->
                             io:format("row~s~n", [Row]),
                             Acc + count(Row)
                         end, 0, Lines),
-    io:format("pl: ~B~n", [PL]).
+    PL2   = lists:foldl(fun(Row, Acc) ->
+                            io:format("row~s~n", [Row]),
+                            Acc + length(Row)
+                        end, 0, Lines),
+    io:format("pl: ~B~n", [PL2 - PL]).
 
 count([34]) -> 0;
 count([34|Rest]) -> count(Rest);
