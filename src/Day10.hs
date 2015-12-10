@@ -22,6 +22,3 @@ takeWords :: String -> [String]
 takeWords [] = []
 takeWords (x:xs) =
     (x : (takeWhile (==x) xs)) : takeWords (dropWhile (==x) xs)
-
-ti :: String -> Int
-ti = read
