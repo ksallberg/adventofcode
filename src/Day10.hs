@@ -12,7 +12,7 @@ calc = length $ step "1113122113"
 
 step :: String -> String
 step str = foldl (\acc _ ->
-                    genNew (takeWords acc)) str [1..40]
+                    genNew (takeWords acc)) str [1..50]
 
 genNew :: [String] -> String
 genNew [] = ""
