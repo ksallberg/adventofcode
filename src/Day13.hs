@@ -12,8 +12,7 @@ main = do
       people  = nub [from | (from, _, _) <- costs]
       perm    = map (\xs -> xs ++ [head xs]) (permutations people)
       prices  = [price p costs | p <- perm]
-      optimal = head . reverse $ sort prices
-  putStrLn $ "Optimal: " ++ show optimal
+  putStrLn $ "Optimal: " ++ show (maximum prices)
 
 parse :: [String] -> Cost
 parse (name : _ : "lose" : points : xs) =
