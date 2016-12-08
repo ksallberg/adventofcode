@@ -6,9 +6,9 @@ main :: IO ()
 main = do
   f <- readFile "input.txt"
   let treated = [treat line True "" ([], []) | line <- lines f]
-      abas    = [map isAba ok | (ok, nok) <- treated]
+      abas    = map concat [map isAba ok | (ok, _nok) <- treated]
       noks    = map snd treated
-      babs    = [step2 (concat ab) n | (ab, n) <- zip abas noks]
+      babs    = [step2 ab n | (ab, n) <- zip abas noks]
       oks     = filter (==True) babs
   putStrLn $ show (length oks)
 
