@@ -25,7 +25,7 @@ isAba :: String -> [String]
 isAba (a : b : c : rest) =
   case (a == c && a /= b) of
     False -> isAba (b : c : rest)
-    True  -> [[a,b,c]] ++ isAba (b : c : rest)
+    True  -> [a,b,c] : (isAba (b : c : rest))
 isAba _ = []
 
 step2 :: [String] -> [String] -> Bool
