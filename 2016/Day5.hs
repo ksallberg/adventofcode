@@ -10,7 +10,7 @@ hashed num = md5s (Str $ secretKey ++ show num)
 
 main :: IO ()
 main = do
-  let ls    = take 8 (next 2231254)
+  let ls    = take 8 (next 0)
       strs  = map hashed ls
       final = map (head . drop 5) strs
   putStrLn final
