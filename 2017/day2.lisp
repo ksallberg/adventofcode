@@ -18,20 +18,11 @@
  (8447 203     1806    6777    278     2850    1232    6369    398     235     212     992     7520    7304    7852    520)
  (3928 107     3406    123     2111    2749    223     125     134     146     3875    1357    508     1534    4002    4417)))
 
-(defun map-largest ()
-  (mapcar (lambda (ls) (cons 'max ls)) (x)))
-
-(defun map-smallest ()
-  (mapcar (lambda (ls) (cons 'min ls)) (x)))
-
-(defun largest ()
-  (mapcar 'eval (list-largest)))
-
-(defun smallest ()
-  (mapcar 'eval (list-smallest)))
+(defun pick (inp)
+  (mapcar 'eval (mapcar (lambda (ls) (cons inp ls)) (x))))
 
 (defun zipped ()
-  (mapcar #'list (largest) (smallest)))
+  (mapcar #'list (pick 'max) (pick 'min)))
 
 ;; add minut before the lists of max and min, and eval the diff
 (defun diffed ()
