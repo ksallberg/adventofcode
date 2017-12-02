@@ -31,7 +31,14 @@
 (defun summed ()
   (reduce #'+ (diffed)))
 
-;; generic attempt
+;; pt 2
+(defun test (inp)
+  (mapcar (lambda (j) (test2 j inp) ) inp))
+
+(defun test2 (i ls)
+  (mapcar (lambda (j) (/ i j)) ls))
+
+;; Generic attempt
 
 ;; (defun run ()
 ;;   (transform (get-file "input.txt")))
