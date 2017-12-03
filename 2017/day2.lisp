@@ -32,11 +32,20 @@
   (reduce #'+ (diffed)))
 
 ;; pt 2
-(defun test (inp)
-  (mapcar (lambda (j) (test2 j inp) ) inp))
+(defun pt2 ()
+  (eval (cons '+ (mapcar 'modline (x)))))
 
-(defun test2 (i ls)
-  (mapcar (lambda (j) (/ i j)) ls))
+(defun modline (inp)
+  (nth 0 (nth 0
+  (remove nil (mapcar (lambda (j)
+                        (remove 1 (remove nil (modlineinstance j inp))))
+                      inp)))))
+
+(defun modlineinstance (i ls)
+  (mapcar (lambda (j) (if (eq 0 (rem i j))
+                          (/ i j)
+                        nil))
+          ls))
 
 ;; Generic attempt
 
