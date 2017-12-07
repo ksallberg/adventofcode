@@ -5,7 +5,8 @@
   (remove nil (transform input)))
 
 (defun transform (input)
-  (mapcar 'isok (mapcar 'str-split input)))
+  (let (apan (mapcar 'str-split input)
+  (mapcar 'isok apan))))
 
 (defun isok (strings)
   (eq (remove-duplicates strings :test #'equal) strings))
