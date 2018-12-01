@@ -1,32 +1,24 @@
 #include <stdio.h>
 #include <string.h>
+#include "list.h"
 
 #define ROWS 1025
 #define MAXCHAR 1000
-#define UGLY 200000
-/* #define CHECK_BIT(var,pos) ((var) & (1<<(pos))) */
 
 int main() {
   FILE *fd;
   char str[ROWS][MAXCHAR];
-  int seen[UGLY];
-  int seen_neg[UGLY];
+  List *lseen;
 
-  int seencnt = 0;
   char *filename = "input.txt";
   int val = 0;
-  /* int seen = 0; */
-  int has_seen = 0;
   int i, j = 0;
+
+  lseen = l_create();
 
   fd = fopen(filename, "r");
   if(fd == NULL) {
     printf("error opening: %s\n", filename);
-  }
-
-  for(i = 0; i < UGLY; i++) {
-    seen[i] = 0;
-    seen_neg[i] = 0;
   }
 
   i = 0;
@@ -38,32 +30,15 @@ int main() {
 
   i = 0;
 
-  while(has_seen == 0) {
+  while(1) {
     val += get_val(str[i]);
     /* printf("val: %d\n", val); */
 
-    /* if(CHECK_BIT(seen, val) == 1) { */
-    /*   break; */
-    /* } */
-    /* seen |= 1 << val; */
-    if(val >= 0) {
-      if(seen[val] == 1) {
-        has_seen=1;
-        break;
-      }
-      seen[val] = 1;
+    if(did_see(lseen->head, val) == 1) {
+      break;
     }
-    else {
-      if(seen_neg[val*(-1)] == 1) {
-        has_seen=1;
-        break;
-      }
-      seen_neg[val*(-1)] = 1;
-    }
+    l_add(lseen, val);
 
-
-    /* seen[seencnt] = val; */
-    /* seencnt++; */
     i++;
     if(i == ROWS) {
       i = 0;
@@ -73,6 +48,24 @@ int main() {
   printf("Final value: %d\n", val);
 
   fclose(fd);
+
+  while(lseen->size > 0) {
+    l_remove(lseen);
+  }
+  free(lseen);
+  return 0;
+}
+
+int did_see(struct l_element *ls, int val) {
+  if(ls == NULL) {
+    return 0;
+  }
+  while(ls->next != NULL) {
+    if(ls->value == val) {
+      return 1;
+    }
+    ls = ls->next;
+  }
   return 0;
 }
 
