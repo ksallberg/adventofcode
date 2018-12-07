@@ -4,9 +4,45 @@
 
 #define MAXCHAR 1000
 
+void parse(char *str, char *temp) {
+  char *old;
+  int posx, posy;
+  memset(temp, 0, sizeof temp);
+  /* char *tempp = *temp; */
+  while (*str!='@') {
+    str ++;
+  }
+  str+=2;
+  old=str;
+  while (*str!=',') {
+    str++;
+  }
+  strncpy(temp, old, str-old);
+  posx = atoi(temp);
+
+  str++;
+  old=str;
+  while(*str!=':') {
+    str++;
+  }
+  strncpy(temp, old, str-old);
+  posy = atoi(temp);
+
+  str+=2;
+  old=str;
+
+  printf("posx: %d\n", posx);
+  printf("posy: %d\n", posy);
+
+  /* printf("temp %s\n", temp); */
+  printf("%s\n", str);
+}
+
 int main() {
   FILE *fd;
   char str[MAXCHAR];
+  char temp[10];
+
   List *lseen;
 
   int fabric[1000][1000];
@@ -26,7 +62,7 @@ int main() {
 
   // save all lines to array
   while(fgets(str, MAXCHAR, fd) != NULL) {
-    printf("chars: %s\n", str);
+    parse(str, temp);
   }
 
   fclose(fd);
