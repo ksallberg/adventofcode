@@ -4,9 +4,11 @@
 
 #define MAXCHAR 1000
 
-void parse(char *str, char *temp) {
+void parse(char *str, int fabric[1000][1000]) {
   char *old;
-  int posx, posy;
+  char temp[10];
+  int posx, posy, width, height;
+  int i,j=0;
   memset(temp, 0, sizeof temp);
   /* char *tempp = *temp; */
   while (*str!='@') {
@@ -19,6 +21,7 @@ void parse(char *str, char *temp) {
   }
   strncpy(temp, old, str-old);
   posx = atoi(temp);
+  memset(temp, 0, sizeof temp);
 
   str++;
   old=str;
@@ -27,26 +30,52 @@ void parse(char *str, char *temp) {
   }
   strncpy(temp, old, str-old);
   posy = atoi(temp);
+  memset(temp, 0, sizeof temp);
 
   str+=2;
   old=str;
 
-  printf("posx: %d\n", posx);
-  printf("posy: %d\n", posy);
+  while(*str!='x') {
+    str++;
+  }
+
+  strncpy(temp, old, str-old);
+  width = atoi(temp);
+  memset(temp, 0, sizeof temp);
+
+  str++;
+  old=str;
+
+  while(*str!='\0') {
+    str++;
+  }
+
+  strncpy(temp, old, str-old);
+  height = atoi(temp);
+
+  //fyll i själva arrayen
+  /* printf("posx: %d\n", posx); */
+  /* printf("posy: %d\n", posy); */
+  /* printf("width: %d\n", width); */
+  /* printf("height: %d\n", height); */
+  for(i=0; i < height; i++) {
+    for(j=0; j < width; j++) {
+      fabric[(i+posy)][(j+posx)] ++;
+    }
+  }
 
   /* printf("temp %s\n", temp); */
-  printf("%s\n", str);
+  /* printf("%s\n", str); */
 }
 
 int main() {
   FILE *fd;
   char str[MAXCHAR];
-  char temp[10];
 
   List *lseen;
 
   int fabric[1000][1000];
-  int i, j=0;
+  int i, j, claims=0;
 
   char *filename = "input.txt";
 
@@ -62,8 +91,20 @@ int main() {
 
   // save all lines to array
   while(fgets(str, MAXCHAR, fd) != NULL) {
-    parse(str, temp);
+    parse(str, fabric);
   }
+
+  for(i = 0; i < 1000; i++) {
+    for(j = 0; j < 1000; j++) {
+      if(fabric[i][j] >= 2) {
+        claims ++;
+      }
+      /* printf("%d", fabric[i][j]); */
+    }
+    /* printf("\n"); */
+  }
+
+  printf("Claimed squares: %d\n", claims);
 
   fclose(fd);
 
