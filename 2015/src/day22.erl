@@ -1,37 +1,69 @@
 -module(day22).
--compile(export_all).
--author("kristian").
 
 -define(bosshits, 58).
 -define(bossdmg, 9).
 
-%% Magic Missile costs 53 mana. It instantly does 4 damage.
+-export([test/0]).
 
-%% Drain costs 73 mana. It instantly does 2 damage and heals
-%% you for 2 hit points.
+-record(life, {hp :: integer(),
+               mana :: integer()}).
 
-%% Shield costs 113 mana. It starts an effect that lasts for
-%% 6 turns. While it is active, your armor is increased by 7.
+-record(effect, {name :: atom(),
+                 life :: integer()}).
 
-%% Poison costs 173 mana. It starts an effect that lasts for
-%% 6 turns. At the start of each turn while it is active,
-%% it deals the boss 3 damage.
-
-%% Recharge costs 229 mana. It starts an effect that lasts
-%% for 5 turns. At the start of each turn while it is active,
-%% it gives you 101 new mana.
+-record(state, {boss :: #life{},
+                player :: #life{},
+                effects :: [#effect{}]}).
 
 test() ->
-    eval([], 500, 50, ?bosshits, 0).
+    Player = #life{hp=50, mana=500},
+    Boss = #life{hp=?bosshits},
+    St = #state{player=Player, boss=Boss, effects=[]},
+    eval(player, [], St, 0).
 
-eval(ActiveSpells, Mana, HitPoints, BossHitPoints, CMana)
-  when BossHitPoints =< 0 ->
+eval(_Turn, _SpellBacklog, #state{boss=#life{hp=BossHP}}, CMana)
+  when BossHP =< 0 ->
     {win, CMana};
-eval(ActiveSpells, Mana, HitPoints, BossHitPoints, CMana)
-  when Mana =< 0 orelse HitPoints =< 0 ->
+eval(_Turn, _SpellBacklog, #state{player=#life{hp=HP, mana=Mana}}, CMana)
+  when Mana =< 0 orelse HP =< 0 ->
     {lose, CMana};
-eval(ActiveSpells, Mana, HitPoints, BossHitPoints, CMana) ->
-    io:format("BossHitPoints ~p~n", [BossHitPoints]),
-    BossNewHP = BossHitPoints - 4,
-    MyNewHP   = HitPoints - ?bossdmg,
-    eval([], Mana - 53, MyNewHP, BossNewHP, CMana + 53).
+eval(player, SpellBacklog, St0, CMana) ->
+    St = apply_effects(St0),
+    case boss_is_dead(St) of
+        true ->
+            {win, CMana};
+        false ->
+            eval(boss, SpellBacklog, St, CMana)
+    end;
+eval(boss, SpellBacklog, #state{player=#life{hp=HP}=Player}=St0, CMana) ->
+    St = apply_effects(St0),
+    case boss_is_dead(St) of
+        true ->
+            {win, CMana};
+        false ->
+            NewHP   = HP - ?bossdmg,
+            io:format("HP ~p ~n", [NewHP]),
+            NewSt = St#state{player=Player#life{hp=NewHP}},
+            eval(player, SpellBacklog, NewSt, CMana)
+    end.
+
+apply_effects(#state{effects=Effects}=St) ->
+    Apply = fun(#effect{name=shield}, AccSt) ->
+                    AccSt;
+               (#effect{name=poison}, #state{boss=#life{hp=HP}=Boss}=AccSt) ->
+                    NewBoss = Boss#life{hp=HP-3},
+                    AccSt#state{boss=NewBoss};
+               (#effect{name=recharge},
+                #state{player=#life{mana=Mana}=Player}=AccSt) ->
+                    NewPlayer = Player#life{mana=Mana+101},
+                    AccSt#state{player=NewPlayer}
+            end,
+    NewSt = lists:foldl(Apply, St, Effects),
+    NewEffects = [Effect#effect{life=L-1}
+                  || #effect{life=L}=Effect <- Effects, L-1 > 0],
+    NewSt#state{effects=NewEffects}.
+
+boss_is_dead(#state{boss=#life{hp=HP}}) when HP =< 0 ->
+    true;
+boss_is_dead(_) ->
+    false.
