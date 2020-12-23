@@ -5,7 +5,7 @@
 
 -define(debug, false).
 
--export([test/0, perm/0]).
+-export([test/0, run/1]).
 
 -record(life, {hp :: integer(),
                mana :: integer()}).
@@ -16,7 +16,9 @@
 -record(state, {boss :: #life{},
                 player :: #life{},
                 cmana :: integer(),
-                effects :: [#effect{}]}).
+                effects :: [#effect{}],
+                hard_mode :: boolean()
+               }).
 
 test() ->
     Player = #life{hp=50, mana=500},
@@ -28,22 +30,23 @@ test() ->
                  poison, magic_missile],
     eval(player, SpellList, St).
 
-perm() ->
+run(HardMode) ->
     Player = #life{hp=50, mana=500},
     Boss = #life{hp=?bosshits},
-    St = #state{player=Player, boss=Boss, effects=[], cmana=0},
+    St = #state{player=Player, boss=Boss,
+                effects=[], cmana=0, hard_mode=HardMode},
     Start = [[poison], [recharge], [shield], [magic_missile], [drain]],
-    Perms = perm1(Start, 8),
+    Perms = perm(Start, 8),
     Answers = [eval(player, Perm, St) || Perm <- Perms],
     lists:sort([X || {win, X} <- Answers]).
 
-perm1(Lss, 0) ->
+perm(Lss, 0) ->
     Lss;
-perm1(Lss, Level) ->
+perm(Lss, Level) ->
     NewLss = [Ls ++ [X]
               || X <- [poison, recharge, shield, magic_missile, drain],
                  Ls <- Lss],
-    perm1(NewLss, Level-1).
+    perm(NewLss, Level-1).
 
 eval(_Turn, _SpellBacklog, #state{boss=#life{hp=BossHP}, cmana=CMana})
   when BossHP =< 0 ->
@@ -51,7 +54,15 @@ eval(_Turn, _SpellBacklog, #state{boss=#life{hp=BossHP}, cmana=CMana})
 eval(_Turn, _SpellBacklog, #state{player=#life{hp=HP, mana=Mana}, cmana=CMana})
   when Mana =< 0 orelse HP =< 0 ->
     {lose, CMana};
-eval(player, SpellBacklog, St0) ->
+eval(player, SpellBacklog, #state{player=#life{hp=OldPHP}=P0,
+                                  hard_mode=HM}=St00) ->
+    St0 = case HM of
+              true ->
+                  NewPlayer = P0#life{hp=OldPHP-1},
+                  St00#state{player=NewPlayer};
+              false ->
+                  St00
+          end,
     St = apply_effects(St0),
     St1 = case SpellBacklog of
               [] ->
@@ -79,8 +90,17 @@ eval(player, SpellBacklog, St0) ->
                     Fail
             end
     end;
-eval(boss, SpellBacklog, #state{effects=Effects}=St0) ->
+eval(boss, SpellBacklog, #state{player=#life{hp=OldPHP}=P0,
+                                effects=Effects,
+                                hard_mode=HM}=St00) ->
     PlayerHasArmor = lists:keyfind(shield, #effect.name, Effects),
+    St0 = case HM of
+              true ->
+                  NewPlayer = P0#life{hp=OldPHP-1},
+                  St00#state{player=NewPlayer};
+              false ->
+                  St00
+          end,
     St = apply_effects(St0),
     case boss_is_dead(St) of
         true ->
