@@ -3,7 +3,7 @@
 main(_) ->
     {ok, Fd} = file:open("input.txt", []),
     Collected = lists:reverse(collect(Fd, [])),
-    VMResult = vm(0, 0, 1, Collected),
+    VMResult = vm(1, 0, 1, Collected),
     io:format("vm result: ~p~n", [VMResult]).
 
 collect(Fd, Acc) ->
