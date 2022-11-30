@@ -5,7 +5,7 @@ import System.File
 
 printSteps : List String -> IO ()
 printSteps (x::xs) = do
-  putStrLn (x)
+  putStrLn x
   printSteps xs
 printSteps [] =
   putStrLn ""
