@@ -1,4 +1,4 @@
-module Day4 where
+module Day5 where
 
 import Data.Maybe
 import qualified Data.Map as M
