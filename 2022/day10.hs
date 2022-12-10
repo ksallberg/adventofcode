@@ -11,7 +11,7 @@ main = do
   let (_, saved) = pt1 ops
       s2 = zip [1..] (drop 2 (reverse saved))
       parts = chunksOf 40 s2
-  forM_ parts (\part -> printl part)
+  forM_ parts printl
 
 parseline :: String -> (Int -> Int)
 parseline ('a':'d':'d':'x':' ':rest) = (+) (read rest :: Int)
