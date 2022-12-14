@@ -20,6 +20,10 @@ instance Show Monkey where
                               ++ ", starting items: " ++ (show x)
                               ++ ", inspects: " ++ (show i)
 
+-- fulhack :: Int
+-- fulhack = 7*17*11*13*19*2*5*3
+fulhack = 23*19*13*17
+
 -- Create a monkey with the given starting items,
 -- operation, test, and throwTo value
 mkMonkey :: Int -> [Integer] -> (Integer -> Integer) ->
@@ -36,39 +40,34 @@ mkTest (divby,monkeya,monkeyb) =
          monkeyb)
 
 -- Create a list of monkeys using the mkMonkey function
-monkeys =
-  [ mkMonkey 0 [89, 84, 88, 78, 70] (* 5) (7, 6, 7)
-  , mkMonkey 1 [76, 62, 61, 54, 69, 60, 85] (+ 1) (17, 0, 6)
-  , mkMonkey 2 [83, 89, 53] (+ 8) (11, 5, 3)
-  , mkMonkey 3 [95, 94, 85, 57] (+ 4) (13, 0, 1)
-  , mkMonkey 4 [82, 98] (+ 7) (19, 5, 2)
-  , mkMonkey 5 [69] (+ 2) (2, 1, 3)
-  , mkMonkey 6 [82, 70, 58, 87, 59, 99, 92, 65] (* 11) (5, 7, 4)
-  , mkMonkey 7 [91, 53, 96, 98, 68, 82] (^ 2) (3, 4, 2)
-  ]
 -- monkeys =
---     [ mkMonkey 0 [79, 98] (* 19) (23, 2, 3),
---       mkMonkey 1 [54, 65, 75, 74] (+6) (19, 2, 0),
---       mkMonkey 2 [79, 60, 97] (^2) (13, 1, 3),
---       mkMonkey 3 [74] (+3) (17, 0, 1)
---     ]
+--   [ mkMonkey 0 [89, 84, 88, 78, 70] (* 5) (7, 6, 7)
+--   , mkMonkey 1 [76, 62, 61, 54, 69, 60, 85] (+ 1) (17, 0, 6)
+--   , mkMonkey 2 [83, 89, 53] (+ 8) (11, 5, 3)
+--   , mkMonkey 3 [95, 94, 85, 57] (+ 4) (13, 0, 1)
+--   , mkMonkey 4 [82, 98] (+ 7) (19, 5, 2)
+--   , mkMonkey 5 [69] (+ 2) (2, 1, 3)
+--   , mkMonkey 6 [82, 70, 58, 87, 59, 99, 92, 65] (* 11) (5, 7, 4)
+--   , mkMonkey 7 [91, 53, 96, 98, 68, 82] (^ 2) (3, 4, 2)
+--   ]
+monkeys =
+    [ mkMonkey 0 [79, 98] (* 19) (23, 2, 3),
+      mkMonkey 1 [54, 65, 75, 74] (+6) (19, 2, 0),
+      mkMonkey 2 [79, 60, 97] (^2) (13, 1, 3),
+      mkMonkey 3 [74] (+3) (17, 0, 1)
+    ]
 -- rest is not by ChatGPT:
 
 main :: IO ()
 main = do
-  ms1 <- rounds 20 monkeys
-  putStrLn $ "final: " ++ (show ms1)
+  ms1 <- rounds 10000 monkeys
   let [a, b] = take 2 ((reverse . sort) [inspects x|x <- ms1])
   putStrLn $ "hej" ++ (show (a*b))
 
 rounds :: Int -> [Monkey] -> IO [Monkey]
 rounds 0 ms = return ms
 rounds x ms = do
-  putStrLn $ "pre round" ++ (show x)
-  putStrLn (show ms)
   ms1 <- mround 0 (length monkeys) ms
-  putStrLn $ "post round" ++ (show x)
-  putStrLn (show ms1)
   rounds (x-1) ms1
 
 mround :: Int -> Int -> [Monkey] -> IO [Monkey]
@@ -95,7 +94,8 @@ updMonkey2 ind add ms = updMonkey (appendItem (ms!!toUpd) add) ms
 
 inspect :: Monkey -> IO (Monkey, [(Int, Integer)])
 inspect m = do
-  let newM=m{startingItems=fmap (\x->(operation m) x `div` 3)(startingItems m),
+  let updF=(\x->(operation m) x `mod` fulhack)
+      newM=m{startingItems=fmap updF (startingItems m),
              inspects=(inspects m)+toInteger (length (startingItems m))
             }
       throwToItems = fmap (\x->((test m) x, x)) (startingItems newM)

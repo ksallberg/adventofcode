@@ -1,0 +1,10 @@
+name:          trests
+category:      Data, Lenses, Generics
+version:       5.2
+build-type:    Simple
+
+library
+  build-depends:
+    split,
+    lens,
+    base
