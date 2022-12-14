@@ -8,8 +8,8 @@ import Data.List.Split
 type Point = (Int, Int)
 type Map = Array (Int, Int) Char
 
-startx = 300
-size = 700
+startx = 250
+size = 750
 
 inp = ["498,4 -> 498,6 -> 496,6",
        "503,4 -> 502,4 -> 502,9 -> 494,9"]
@@ -17,23 +17,23 @@ inp = ["498,4 -> 498,6 -> 496,6",
 main :: IO ()
 main = do
   file <- readFile "input.txt"
-  let arr = listArray ((startx,0), (size,size)) (repeat '.')
-      parsed = fmap parseLine (lines file)
+  let parsed = fmap parseLine (lines file)
       largestY = head $ reverse $ sort (map snd (concat parsed))
+      arr = listArray ((startx,0), (size,largestY+2)) (repeat '.')
       flooR = [(startx,largestY+2), (size, largestY+2)]
       arrRock = foldl (\accMap ln -> rockIt ln accMap) arr (flooR:parsed)
   putStrLn $ "largestY: " ++ (show largestY)
   rounds <- manySand 0 largestY arrRock
-  putStrLn $ "rounds" ++ (show rounds)
+  putStrLn $ "rounds" ++ (show (rounds+1))
 
 parseLine :: String -> [(Int, Int)]
-parseLine st = [(read a, read b)| [a,b] <- prep]
-    where prep = fmap (splitOn ",") (splitOn " -> " st)
+parseLine st = [(read a, read b) | [a,b] <- prep]
+  where prep = fmap (splitOn ",") (splitOn " -> " st)
 
 printSection :: Map -> IO ()
 printSection map = do
-  let clip = [(x, y) |y<-[0..29], x<-[484..484+29]]
-      divide = chunksOf 30 clip
+  let clip = [(x, y) |y<-[0..9], x<-[494..503]]
+      divide = chunksOf 10 clip
       strs = [fmap (\(x, y) -> map ! (x,y)) d | d <- divide]
   forM_ strs putStrLn
 
@@ -45,20 +45,22 @@ rockIt ((a,b):(c,d):rest) map = rockIt ((c,d):rest) newMap
 
 manySand :: Int -> Int -> Map -> IO Int
 manySand round abyssAt map = do
-  let (stop, newRound, newMap) = fillSand round abyssAt (500, 0) map
-  case stop of
-    False -> do
+  (x, y, z) <- fillSand round abyssAt (500, 0) map
+  case (x, y, z) of
+    (False, newRound, newMap) -> do
       -- printSection newMap
       -- putStrLn $ "round: " ++ (show newRound)
       manySand (newRound+1) abyssAt newMap
-    True ->
-      return round
+    (True, newRound, _) ->
+      return newRound
 
-fillSand :: Int -> Int -> (Int, Int) -> Map -> (Bool, Int, Map)
-fillSand round abyss pos@(x,y) map =
+fillSand :: Int -> Int -> (Int, Int) -> Map -> IO (Bool, Int, Map)
+fillSand round abyss pos@(x,y) map = do
+  -- printSection map
+  -- putStrLn $ "H" ++ (show pos) ++ (show nextType)
   case (spawnReached, nextBlocked, downLeftBlocked, downRightBlocked) of
     (True, True, True, True) ->
-       (True, round, map)
+      return (True, round, map)
     (_, False, _, _) ->
       fillSand round abyss (x,y+1) map
     (_, _, False, _) ->
@@ -66,7 +68,7 @@ fillSand round abyss pos@(x,y) map =
     (_, _, _, False) ->
       fillSand round abyss (x+1,y+1) map
     (_, True, True, True) ->
-      (False, round, map // [(pos, 'o')])
+      return (False, round, map // [(pos, 'o')])
    where spawnReached = x == 500 && y == 0
          abyssReached = y >= abyss
          nextType = map ! (x, y+1)
