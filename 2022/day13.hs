@@ -16,7 +16,7 @@ instance Ord Packet where
   compare (Packets []) (Packets []) = EQ
   compare (Packets []) (Packets _)  = LT
   compare (Packets _ ) (Packets []) = GT
-  compare x@(Packets (a:as)) y@(Packets (b:bs)) =
+  compare (Packets (a:as)) (Packets (b:bs)) =
     case compare a b of
       EQ -> compare (Packets as) (Packets bs)
       other -> other
