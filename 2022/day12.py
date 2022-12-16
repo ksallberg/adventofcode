@@ -31,7 +31,7 @@ def debugit(row1, col1):
 # [
 #  ['t','h','i','s',' ','i','s',' ','a',' ','r','o','w,]
 # ]
-f = open("inputy.txt", "r")
+f = open("input.txt", "r")
 
 lines = list(filter(None, f.read().split("\n")))
 for line in lines:
@@ -40,8 +40,11 @@ for line in lines:
 # Then find the position to start the BFS search from.
 # It is denoted by 'S'
 start = (0,0)
+all_starts = []
 for row in range(0, len(lines)):
     for col in range(0, len(lines[0])):
+        if(lines[row][col] == 'a'):
+            all_starts.append((row, col))
         if(lines[row][col] == 'S'):
             start = (row, col)
 
@@ -66,7 +69,7 @@ def is_valid(row, col, currently_at_elevation):
         return False
 
 # BFS implementation
-def bfs():
+def bfs(initial_position):
     # BFS requires a queue, that you can insert in the end of,
     # and that you can pick from the beginning of,
     #
@@ -75,7 +78,7 @@ def bfs():
     # visited nodes might be a lot larger than this
     # global queue
     bfs_queue = queue()
-    bfs_queue.append((start, 0))
+    bfs_queue.append((initial_position, 0))
 
     # Keep track of what has been visited so that we don't walk
     # around forever
@@ -91,7 +94,7 @@ def bfs():
 
         # if we reached destination
         if(currently_at_elevation == 'E'):
-            print("home now, dist: ", dist)
+            return dist
 
         # if we already visited a position, discard current pos and get
         # next from queue
@@ -121,4 +124,14 @@ def bfs():
             if(is_valid(adjrow, adjcol, currently_at_elevation)):
                 bfs_queue.append(((adjrow, adjcol), dist+1))
 
-bfs()
+print("pt 1 solution", bfs(start))
+
+# pt2:
+
+all = [bfs(x) for x in all_starts]
+all2 = list(filter(lambda x: x != None, all))
+
+print("all: ", all2)
+all2.sort()
+
+print("pt 2 solution", all2[0])
