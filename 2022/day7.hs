@@ -2,6 +2,7 @@ module Day7 where
 
 import Control.Lens
 import Control.Monad
+import Data.List (sort)
 import Data.List.Split
 
 data Direction = Up | Down String
@@ -20,9 +21,16 @@ main = do
   file <- readFile "input.txt"
   let actions = fmap parseLine (lines file)
       fs = run (Dir "/" []) ["/"] (tail actions)
-      sums = (sum . filter (<100000)) (sumdirs fs)
-  putStrLn (show sums)
-  pprint fs 0
+      allSums = map snd (sumdirs' fs)
+      sums = (sum . filter (<100000)) allSums
+      topLevelSum = sumdirs fs
+      currentlyAvailable = 70000000 - topLevelSum
+      toDelete = 30000000 - currentlyAvailable
+  -- pt 1
+  putStrLn $ "pt1: " ++ (show sums)
+  -- pt 2
+  putStrLn $ "pt2: " ++ (show (head . sort $ filter (>= toDelete) allSums))
+  -- pprint fs 0
 
 parseLine :: String -> Action
 parseLine "$ cd .." = Cd Up
@@ -61,10 +69,17 @@ hasSubdir (Dir _name chs) (search:_) =
     [(pos, (Dir a b))] ->
       Just (pos, (Dir a b))
 
-sumdirs :: FileSystem -> [Integer]
-sumdirs (Dir name chs) = (sum files + sum dirs):dirs
-  where files = [size|File _ size <- chs]
-        dirs = concat [sumdirs d|d@(Dir _ _) <- chs]
+-- just sum everything under a certain directory
+sumdirs :: FileSystem -> Integer
+sumdirs (Dir name chs) = files + dirs
+  where files = sum [size | File _ size <- chs]
+        dirs = sum [sumdirs d | d@(Dir _ _) <- chs]
+
+-- traverse the tree, collect all directories, and sum
+-- everything under each directory
+sumdirs' :: FileSystem -> [(String, Integer)]
+sumdirs' d@(Dir name chs) = (name, sumdirs d) : dirs
+  where dirs = concat [sumdirs' d2|d2@(Dir _ _) <- chs]
 
 -- tests:
 test1 = create ["/"] (Dir "a" []) (Dir "/" [])
