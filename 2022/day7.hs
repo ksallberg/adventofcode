@@ -50,7 +50,8 @@ run fs path ((LsDir name):actions) =
 run fs path ((LsFile name size):actions) =
   run (create path fs (File name size)) path actions
 
--- only supports the happy case: that all folders in path exist
+-- only supports the happy case: that all folders in path exist!
+-- assumes that _ and name will always match
 create :: Path -> FileSystem -> FileSystem -> FileSystem
 create (_:xs) cur@(Dir name chs) newFs =
   case (hasSubdir cur xs) of
