@@ -4,7 +4,8 @@ import Data.Set
 import Data.List.Split
 import Data.Maybe
 
-data Monkey = Operation String String (Integer -> Integer -> Integer) | Yell Integer
+data Monkey =
+  Operation String String (Integer -> Integer -> Integer) | Yell Integer
 
 main :: IO ()
 main = do
