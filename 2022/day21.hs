@@ -28,7 +28,8 @@ loop x adder parsed = case getMonkey "root" x parsed of
              putStrLn ("___FOUND THE RIGHT " ++ (show m1) ++ " "++ (show m2))
              return y
            (False, _, m1, m2) -> do
-             putStrLn ("___adder" ++ show x ++ ", " ++ show adder ++ ", " ++ (show m1) ++ ", " ++ (show m2))
+             putStrLn ("___adder" ++ show x ++ ", " ++ show adder ++
+                       ", " ++ (show m1) ++ ", " ++ (show m2))
              case m1 > m2 of
                -- talet måste öka
                True -> do
@@ -59,7 +60,8 @@ parseOp "+" = (+)
 parseOp "-" = (-)
 parseOp "*" = (*)
 
-getMonkey :: String -> Integer -> [(String, Monkey)] -> (Bool, Integer, Integer, Integer)
+getMonkey ::
+  String -> Integer -> [(String, Monkey)] -> (Bool, Integer, Integer, Integer)
 getMonkey "root" hooman monkeys = (monkey1 == monkey2, hooman, monkey1, monkey2)
   where Operation m1 m2 _ = fromJust $ lookup "root" monkeys
         monkey1 = getMonkey' m1 hooman monkeys
