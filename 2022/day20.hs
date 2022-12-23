@@ -28,12 +28,10 @@ pickNums cl = elem1000 + elem2000 + elem3000
         (_, elem2000) = fromJust $ DC.focus (DC.rotN 2000 gotoZero)
         (_, elem3000) = fromJust $ DC.focus (DC.rotN 3000 gotoZero)
 
--- nooooooooooooooo
 moveN :: Int -> DC.CList (Int, Integer) -> DC.CList (Int, Integer)
 moveN 0 input = input
-moveN count input = moveN (count-1) (DC.fromList (zip [0..] ls))
+moveN count input = moveN (count-1) moved
   where moved = move [0..4999] input
-        ls = fmap snd (DC.toList moved)
 
 move :: [Int] -> DC.CList (Int, Integer) -> DC.CList (Int, Integer)
 move [] cl = cl
