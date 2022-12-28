@@ -15,10 +15,8 @@ main :: IO ()
 main = do
   file <- readFile "input.txt"
   let parsed = fmap parseLine (lines file)
-      beacons = DS.fromList (fmap (\(s,b,l) -> b) parsed)
-      sensorMap = coverSensors parsed
-      ln10 = coverageAtY sensorMap beacons 2000000
-  putStrLn (show (length ln10))
+      (x,y) = evalDiamonds parsed parsed
+  putStrLn (show (x*4000000+y))
 
 parseLine :: String -> (Point, Point, Integer)
 parseLine x = (s, b, distX + distY)
@@ -35,38 +33,59 @@ parseLine x = (s, b, distX + distY)
 parseLine' :: String -> String
 parseLine' (_:'=':rest) = rest
 
-coverSensors :: [(Point, Point, Integer)] -> DS.Set RangePoint
-coverSensors input = DL.foldl' accFun DS.empty input
-  where accFun = (\accCov (s, b, len) -> sensorCoverage Both (s, len) accCov)
+evalDiamonds :: [(Point, Point, Integer)] -> [(Point, Point, Integer)] -> Point
+evalDiamonds (this@(s,b,len):rest) parse =
+  case evalDiamond this parse of
+    Left False ->
+      evalDiamonds rest parse
+    Right (xfrom, xto, y) ->
+      let pt1 = (xfrom ,y)
+          pt2 = (xto ,y)
+          pt1OK = evalPointToSensors pt1 parse
+      in case pt1OK of
+           True ->
+             pt1
+           False ->
+             pt2
+
+evalDiamond :: (Point, Point, Integer) ->
+               [(Point, Point, Integer)] ->
+               Either Bool RangePoint
+evalDiamond (s, b, len) parse = case DS.null filtered of
+                                  True ->
+                                    trace ("eval diamond false:" ++ show s) (Left False)
+                                  False ->
+                                    Right (head $ DS.toList filtered)
+  where map = sensorCoverage Both (s, len+1) DS.empty
+        filterf = (\(xfrom, xto, y) ->
+                     let pt1 = (xfrom ,y)
+                         pt2 = (xto, y)
+                         pt1OK = evalPointToSensors pt1 parse
+                         pt2OK = evalPointToSensors pt2 parse
+                     in (pt1OK || pt2OK))
+        filtered = DS.filter filterf map
+
+evalPointToSensors :: Point -> [(Point, Point, Integer)] -> Bool
+evalPointToSensors p@(x,y) [] = x >= 0 && x <= 4000000 && y >= 0 && y <= 4000000
+evalPointToSensors p@(x,y) (((sx, sy), b, l):ps) =
+  case dist <= l of
+    True ->
+      False
+    False ->
+      evalPointToSensors p ps
+  where distx = abs (x-sx)
+        disty = abs (y-sy)
+        dist = distx + disty
 
 sensorCoverage :: Dir -> (Point, Integer) ->
                   DS.Set RangePoint ->
                   DS.Set RangePoint
 sensorCoverage _ (p, 0) covered = covered
 sensorCoverage U ((x,y), len) covered = sensorCoverage U ((x,y-1), len-1) row
-  where row = case y of
-                -- ugh
-                2000000 ->
-                  DS.insert (x-len, x+len, y) covered
-                _ ->
-                  covered
+  where row = DS.insert (x-len, x+len, y) covered
 sensorCoverage D ((x,y), len) covered = sensorCoverage D ((x,y+1), len-1) row
-  where row = case y of
-                -- ugh
-                2000000 ->
-                  DS.insert (x-len, x+len, y) covered
-                _ ->
-                  covered
+  where row = DS.insert (x-len, x+len, y) covered
 sensorCoverage Both ((x,y), len) covered =
   sensorCoverage D ((x,y+1), len-1) lessY
   where row = DS.insert (x-len, x+len, y) covered
         lessY = sensorCoverage U ((x,y-1), len-1) row
-
-coverageAtY :: DS.Set RangePoint ->
-               DS.Set Point ->
-               Integer ->
-               [(Integer, Integer)]
-coverageAtY map beacons y = DS.toList (DS.difference expanded beacons)
-  where filtered = DS.filter (\(mFrom, mTo, my) -> my == y) map
-        expanded = DS.fromList (concat [zip [from..to] (repeat y)
-                                       | (from, to, y) <- (DS.toList filtered)])
