@@ -19,27 +19,22 @@ main = do
   let map = floorFill $ listArray ((0,0), (6,roomHeight)) (repeat '.')
       gas = (concat . repeat) (head $ lines file)
       rocks = (concat . repeat) [Horiz, Plus, J, Vert, Ball]
-  height <- loop 2022 map gas (roomHeight-3-(rockH (head rocks))) rocks
+      height = loop 2022 map gas (roomHeight-3-(rockH (head rocks))) rocks
   putStrLn $ "final: " ++ (show (roomHeight-height))
 
-loop :: Int -> Map -> Gas -> Int -> [Rock] -> IO Int
-loop 0 map _ _ _ = return $ highestTower map
-loop counter map gas spawnY (r:ocks) = do
+loop :: Int -> Map -> Gas -> Int -> [Rock] -> Int
+loop 0 map _ _ _ = highestTower map
+loop counter map gas spawnY (r:ocks) =
   let newRockPos = (2, spawnY)
-  (newMap, newGas) <- loop' newRockPos r map gas
-  putStrLn $ "hightower" ++ (show (highestTower newMap))
-  let newSpawnY = (highestTower newMap) - 3 - (rockH (head ocks))
-  -- printSection newMap
-  loop (counter-1) newMap newGas newSpawnY ocks
+      (newMap, newGas) = loop' newRockPos r map gas
+      newSpawnY = (highestTower newMap) - 3 - (rockH (head ocks))
+  in loop (counter-1) newMap newGas newSpawnY ocks
 
-loop' :: Point -> Rock -> Map -> Gas -> IO (Map, Gas)
-loop' rockPos@(x, y) rock map (g:a:s) = do
-  let debugMap = updateMap map rockPos rock
-  -- printSection debugMap
+loop' :: Point -> Rock -> Map -> Gas -> (Map, Gas)
+loop' rockPos@(x, y) rock map (g:a:s) =
   case hitRock of
     True ->
-      -- let (_, gasMovedP2) = doGas fallMovedP map a rock
-      return (updateMap map fallMovedP rock, (a:s))
+      (updateMap map fallMovedP rock, (a:s))
     False ->
       loop' fallMovedP rock map (a:s)
   where (_, gasMovedP) = doGas rockPos map g rock
